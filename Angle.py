@@ -5,8 +5,17 @@ import almath
 
 
 class AngleMath:
-    @classmethod
-    def to_middle_xy(cls, a, b):
+
+    @staticmethod
+    def to_radian(angle):
+        return angle*almath.TO_RAD
+
+    @staticmethod
+    def to_degree(radian):
+        return radian*almath.TO_DEG
+
+    @staticmethod
+    def to_middle_xy(a, b):
         """a를 중점으로 하는 b의 좌표를 리턴
 
         :param a:
@@ -18,8 +27,8 @@ class AngleMath:
         """
         return b - a
 
-    @classmethod
-    def get_to_radian(cls, a, b):
+    @staticmethod
+    def get_to_radian(a, b):
         """라디안값을 추출하는 함수 리턴
 
         :param a:
@@ -72,8 +81,8 @@ class AngleMath:
         else:
             return -1
 
-    @classmethod
-    def reversal_way_angle(cls, angle):
+    @staticmethod
+    def reversal_way_angle(angle):
         """기준점의 시작 방향을 반대로 바꾼다
         :param angle:   각도
         :return: 2pi-angle
@@ -81,8 +90,8 @@ class AngleMath:
         """
         return math.pi * 2 - angle
 
-    @classmethod
-    def change_zero_benchmark(cls, angle, change_angle):
+    @staticmethod
+    def change_zero_benchmark(angle, change_angle):
         """극 좌표계 angle의 0의 기준을 changeAngle로 변환한다
         :param angle:
         :param change_angle:
