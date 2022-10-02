@@ -1,3 +1,4 @@
+# coding=utf-8
 class AngleMath:
     @staticmethod
     def to_middle_xy(a, b):
