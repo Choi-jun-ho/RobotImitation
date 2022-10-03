@@ -7,7 +7,7 @@ nao를 좌표로 움직일 수 있게 할 수 있게 하는 모듈
 """
 import time
 
-from Angle import *
+from AngleMath import *
 import numpy as np
 import math
 
