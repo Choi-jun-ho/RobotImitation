@@ -211,7 +211,15 @@ class Nao:
                                        self.__motion_service, power=0.2 if power < 0.2 else power)
 
     def move_to_l_elbow(self, points):  # 어깨와 팔꿈치, 팔꿈치와 손의 선분에 대한 각도가 힌트
-        pass
+        is_l_elbow_points, now_a, now_b, power, absolute_value \
+            = self.get_power_and_absolute_value(points, "LElbow", "LWrist", "LArm")
+
+        if is_l_elbow_points and self.is_skeleton_parts(points, "LShoulder", "LElbow"):
+            if absolute_value > 0.05:
+                lshoulder_pos = self.to2d_position(points, Skeleton.Skeleton.BODY_PARTS["LShoulder"])
+                l_elbow_pos = self.to2d_position(points, Skeleton.Skeleton.BODY_PARTS["LElbow"])
+                nta.action_l_elbow(now_a, now_b, lshoulder_pos, l_elbow_pos, 0.01,
+                                   self.__motion_service, power=0.2 if power < 0.2 else power)
 
     def __set_point_nao(self, points):
         """Skeleton Point로 움직일 나오의 부위들을 지정하는 함수
@@ -223,6 +231,7 @@ class Nao:
         self.move_to_r_arm(points)
         self.move_to_r_elbow(points)
         self.move_to_l_arm(points)
+        self.move_to_l_elbow(points)
 
 
         result_roll = []

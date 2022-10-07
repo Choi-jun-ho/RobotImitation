@@ -94,9 +94,9 @@ def action_r_elbow(a, b, r_shoulder_pos, r_elbow_pos, sleep_time, motion_service
     :return:
     """
 
-    r_shoulder_roll_zero_bench_angle = to_nao_roll_radain2d(a, b)
-    shoulder_roll_zero_bench_angle = to_nao_roll_radain2d(r_shoulder_pos, r_elbow_pos)
-    angle = r_shoulder_roll_zero_bench_angle - shoulder_roll_zero_bench_angle
+    r_elobw_roll_zero_bench_angle = to_nao_roll_radain2d(a, b)
+    r_shoulder_roll_zero_bench_angle = to_nao_roll_radain2d(r_shoulder_pos, r_elbow_pos)
+    angle = r_elobw_roll_zero_bench_angle - r_shoulder_roll_zero_bench_angle
     motion_service.setAngles("RElbowYaw", to_radian(0), 1.0)
     motion_service.setAngles("RElbowRoll", angle, power)
     motion_service.setAngles("RWristYaw", to_radian(90), 1.0)
@@ -133,5 +133,26 @@ def action_l_shourlder(a, b, neck_pos, mid_hip_pos, sleep_time, motion_service, 
     else:
         motion_service.setAngles("LShoulderPitch", to_radian(90), 1.0)
     motion_service.setAngles("LShoulderRoll", angle, power)
+
+    time.sleep(sleep_time)
+
+def action_l_elbow(a, b, l_shoulder_pos, l_elbow_pos, sleep_time, motion_service, power):
+    """다리가 고정된 상태에서 오른팔을 좌표로 움직일 수 있는 함수
+
+    :param a:
+    :param b:
+    :param sleep_time:
+    :param motion_service:
+    :param power:
+    :return:
+    """
+
+    l_elbow_roll_zero_bench_angle = to_nao_roll_radain2d(a, b)
+    l_shoulder_roll_zero_bench_angle = to_nao_roll_radain2d(l_shoulder_pos, l_elbow_pos)
+    angle = l_elbow_roll_zero_bench_angle - l_shoulder_roll_zero_bench_angle
+    motion_service.setAngles("LElbowYaw", to_radian(0), 1.0)
+    motion_service.setAngles("LElbowRoll", angle, power)
+    motion_service.setAngles("LWristYaw", to_radian(-90), 1.0)
+
 
     time.sleep(sleep_time)
