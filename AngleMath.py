@@ -96,3 +96,8 @@ def change_zero_benchmark(angle, change_angle):
         angle -= 2 * math.pi
 
     return angle
+
+
+def zero_benchmark_roll(angle):
+    return change_zero_benchmark(angle, math.pi*3/2)
+
