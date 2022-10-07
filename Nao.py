@@ -55,7 +55,7 @@ class Nao:
         if self.__use_nao_cam is True:
             self.__video_service = self.__session.service("ALVideoDevice")
 
-            resolution = vision_definitions.kVGA
+            resolution = vision_definitions.kQVGA
             color_space = vision_definitions.kBGRColorSpace
             fps = 30
 
@@ -183,6 +183,16 @@ class Nao:
                 nta.action_r_shourlder(now_a, now_b, neck_pos, mid_hip_pos, 0.01,
                                        self.__motion_service, power=0.2 if power < 0.2 else power)
 
+    def move_to_r_elbow(self, points):
+        is_r_elbow_points, now_a, now_b, power, absolute_value \
+            = self.get_power_and_absolute_value(points, "RElbow", "RWrist", "RArm")
+
+        if is_r_elbow_points and self.is_skeleton_parts(points, "RShoulder", "RElbow"):
+            if absolute_value > 0.05:
+                rshoulder_pos = self.to2d_position(points, Skeleton.Skeleton.BODY_PARTS["RShoulder"])
+                r_elbow_pos = self.to2d_position(points, Skeleton.Skeleton.BODY_PARTS["RElbow"])
+                nta.action_r_elbow(now_a, now_b, rshoulder_pos, r_elbow_pos, 0.01,
+                                       self.__motion_service, power=0.2 if power < 0.2 else power)
 
     def move_to_l_arm(self, points):
         """ 다리가 고정된 상태에서 왼쪽 다리가 고정할 수 있게 움직이는 함수
@@ -211,6 +221,7 @@ class Nao:
         """
 
         self.move_to_r_arm(points)
+        self.move_to_r_elbow(points)
         self.move_to_l_arm(points)
 
 
@@ -221,7 +232,7 @@ class Nao:
                 result_roll.append(self.relbow_com_roll[i] - now[i])
 
         self.relbow_com_roll = self.__motion_service.getPosition("RElbowRoll", 1, True)
-        self.relbow_com_yaw = self.__motion_service.getPosition("RElbowYaw", 1 , True)
+        self.relbow_com_yaw = self.__motion_service.getPosition("RElbowYaw", 1, True)
 
         s = ""
         for i in range(len(result_roll)):

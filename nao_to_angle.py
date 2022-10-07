@@ -71,13 +71,43 @@ def action_r_shourlder(a, b, neck_pos, middle_heap_pos, sleep_time, motion_servi
     angle = r_shoulder_roll_zero_bench_angle - body_shoulder_roll_zero_bench_angle
 
     if angle >= to_radian(18):
-        motion_service.setAngles("RShoulderRoll", to_radian(18), power)
+        motion_service.setAngles("RShoulderPitch", to_radian(90), 1.0)
     elif angle <= to_radian(-76):
         # 기준점이 완전히 바뀌기 때문에 바뀌는 코드를 적어야된다
-        motion_service.setAngles("RShoulderRoll", to_radian(-76), power)
+        motion_service.setAngles("RShoulderPitch", to_radian(-90), 1.0)
     else:
         motion_service.setAngles("RShoulderPitch", to_radian(90), 1.0)
-        motion_service.setAngles("RShoulderRoll", angle, power)
+
+    motion_service.setAngles("RShoulderRoll", angle, power)
+
+    time.sleep(sleep_time)
+
+
+def action_r_elbow(a, b, r_shoulder_pos, r_elbow_pos, sleep_time, motion_service, power):
+    """다리가 고정된 상태에서 오른팔을 좌표로 움직일 수 있는 함수
+
+    :param a:
+    :param b:
+    :param sleep_time:
+    :param motion_service:
+    :param power:
+    :return:
+    """
+
+    r_shoulder_roll_zero_bench_angle = to_nao_roll_radain2d(a, b)
+    shoulder_roll_zero_bench_angle = to_nao_roll_radain2d(r_shoulder_pos, r_elbow_pos)
+    angle = r_shoulder_roll_zero_bench_angle - shoulder_roll_zero_bench_angle
+    motion_service.setAngles("RElbowYaw", to_radian(0), 1.0)
+    motion_service.setAngles("RElbowRoll", angle, power)
+    motion_service.setAngles("RWristYaw", to_radian(90), 1.0)
+    # if angle >= to_radian(18):
+    #     motion_service.setAngles("RElbowRoll", to_radian(18), power)
+    # elif angle <= to_radian(-76):
+    #     # 기준점이 완전히 바뀌기 때문에 바뀌는 코드를 적어야된다
+    #     motion_service.setAngles("RElbowRoll", to_radian(-76), power)
+    # else:
+    #     #motion_service.setAngles("RElbowPitch", to_radian(90), 1.0)
+
 
     time.sleep(sleep_time)
 
@@ -95,13 +125,13 @@ def action_l_shourlder(a, b, neck_pos, mid_hip_pos, sleep_time, motion_service, 
     l_shoulder_roll_angle = to_nao_roll_radain2d(a, b)
     body_roll_angle = to_nao_roll_radain2d(neck_pos, mid_hip_pos)
     angle = l_shoulder_roll_angle - body_roll_angle
-
+    
     if angle >= to_radian(76):
-        motion_service.setAngles("LShoulderRoll", to_radian(76), power)
+        motion_service.setAngles("LShoulderPitch", to_radian(-90), 1.0)
     elif angle <= to_radian(-18):
-        motion_service.setAngles("LShoulderRoll", to_radian(-18), power)
+        motion_service.setAngles("LShoulderPitch", to_radian(90), 1.0)
     else:
         motion_service.setAngles("LShoulderPitch", to_radian(90), 1.0)
-        motion_service.setAngles("LShoulderRoll", angle, power)
+    motion_service.setAngles("LShoulderRoll", angle, power)
 
     time.sleep(sleep_time)
