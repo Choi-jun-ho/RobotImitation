@@ -26,7 +26,6 @@ def to_nao_roll_radain2d(a, b):
 
     angle = zero_benchmark_roll(angle)
     # 기준점 정렬 완료 상태, +- 상태로 변환 해야 된다
-    print angle*almath.TO_DEG
 
     if angle <= math.pi:
         return angle
@@ -56,7 +55,7 @@ def before_now_get_power(before_a, before_b, now_a, now_b):
     return power, absolute_value
 
 
-def action_r_shourlder(a, b, sleep_time, motion_service, power):
+def action_r_shourlder(a, b, neck_pos, middle_heap_pos, sleep_time, motion_service, power):
     """다리가 고정된 상태에서 오른팔을 좌표로 움직일 수 있는 함수
 
     :param a:
@@ -67,7 +66,9 @@ def action_r_shourlder(a, b, sleep_time, motion_service, power):
     :return:
     """
 
-    angle = to_nao_roll_radain2d(a, b)
+    r_shoulder_roll_zero_bench_angle = to_nao_roll_radain2d(a, b)
+    body_shoulder_roll_zero_bench_angle = to_nao_roll_radain2d(neck_pos, middle_heap_pos)
+    angle = r_shoulder_roll_zero_bench_angle - body_shoulder_roll_zero_bench_angle
 
     if angle >= to_radian(18):
         motion_service.setAngles("RShoulderRoll", to_radian(18), power)
@@ -81,7 +82,7 @@ def action_r_shourlder(a, b, sleep_time, motion_service, power):
     time.sleep(sleep_time)
 
 
-def action_l_shourlder(a, b, sleep_time, motion_service, power):
+def action_l_shourlder(a, b, neck_pos, mid_hip_pos, sleep_time, motion_service, power):
     """다리가 고정된 상태에서 왼팔을 좌표로 움직일 수 있는 함수
     
     :param a: 
@@ -91,7 +92,9 @@ def action_l_shourlder(a, b, sleep_time, motion_service, power):
     :param power: 
     :return: 
     """
-    angle = to_nao_roll_radain2d(a, b)
+    l_shoulder_roll_angle = to_nao_roll_radain2d(a, b)
+    body_roll_angle = to_nao_roll_radain2d(neck_pos, mid_hip_pos)
+    angle = l_shoulder_roll_angle - body_roll_angle
 
     if angle >= to_radian(76):
         motion_service.setAngles("LShoulderRoll", to_radian(76), power)

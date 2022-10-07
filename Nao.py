@@ -5,7 +5,7 @@ import almath
 import nao_to_angle as nta
 import vision_definitions
 import numpy
-import motion
+import Skeleton
 from Naocap import Naocap
 
 
@@ -55,7 +55,7 @@ class Nao:
         if self.__use_nao_cam is True:
             self.__video_service = self.__session.service("ALVideoDevice")
 
-            resolution = vision_definitions.kQVGA
+            resolution = vision_definitions.kVGA
             color_space = vision_definitions.kBGRColorSpace
             fps = 30
 
@@ -104,10 +104,21 @@ class Nao:
         :return:    각 Point가 있으면 True
 
         """
-        if points[a] is not None and points[b] is not None \
-                and not self.__motion_service.getIdlePostureEnabled(parts):
+        is_skeleton_parts = False
+        if self.is_skeleton_parts(points, a, b):
+            is_skeleton_parts = True
+        if is_skeleton_parts and not self.__motion_service.getIdlePostureEnabled(parts):
             return True
         return False
+
+    @staticmethod
+    def is_skeleton_parts(points, a, b):
+        a_index = Skeleton.Skeleton.BODY_PARTS[a]
+        b_index = Skeleton.Skeleton.BODY_PARTS[b]
+        is_body_index = False
+        if points[a_index] is not None and points[b_index] is not None:
+            is_body_index = True
+        return is_body_index
 
     def is_before_points(self, a, b):
         """
@@ -130,7 +141,7 @@ class Nao:
         """
         return almath.Position2D(points[a][0], -1 * points[a][1])
 
-    def get_power_and_absolute_value(self, points, a, b, parts):
+    def get_power_and_absolute_value(self, points, a_name, b_name, parts):
         """현재의 좌표와 적절한 힘과 이전과 현재의 차에대한 절댓값을 반환 하는 함수
 
         :param points:
@@ -139,11 +150,12 @@ class Nao:
         :param parts:
         :return:
         """
-        if self.is_points(points, a, b, parts):
+        if self.is_points(points, a_name, b_name, parts):
 
             power = 0.2
             absolute_value = 0.2  # 이전값과 절대적인 차이를 말함 차이가 작으면 실행 안해 조금더 부드럽게 작용
-
+            a = Skeleton.Skeleton.BODY_PARTS[a_name]
+            b = Skeleton.Skeleton.BODY_PARTS[b_name]
             now_a = self.to2d_position(points, a)
             now_b = self.to2d_position(points, b)
 
@@ -162,10 +174,15 @@ class Nao:
         :return:
         """
         is_r_arm_points, now_a, now_b, power, absolute_value \
-            = self.get_power_and_absolute_value(points, 2, 3, "RArm")
-        if is_r_arm_points:
+            = self.get_power_and_absolute_value(points, "RShoulder", "RElbow", "RArm")
+
+        if is_r_arm_points and self.is_skeleton_parts(points, "Neck", "MidHip"):
             if absolute_value > 0.05:
-                nta.action_r_shourlder(now_a, now_b, 0.01, self.__motion_service, power=0.2 if power < 0.2 else power)
+                neck_pos = self.to2d_position(points, Skeleton.Skeleton.BODY_PARTS["Neck"])
+                mid_hip_pos = self.to2d_position(points, Skeleton.Skeleton.BODY_PARTS["MidHip"])
+                nta.action_r_shourlder(now_a, now_b, neck_pos, mid_hip_pos, 0.01,
+                                       self.__motion_service, power=0.2 if power < 0.2 else power)
+
 
     def move_to_l_arm(self, points):
         """ 다리가 고정된 상태에서 왼쪽 다리가 고정할 수 있게 움직이는 함수
@@ -174,10 +191,14 @@ class Nao:
         :return:
         """
         is_l_arm_points, now_a, now_b, power, absolute_value \
-            = self.get_power_and_absolute_value(points, 5, 6, "LArm")
-        if is_l_arm_points:
+            = self.get_power_and_absolute_value(points, "LShoulder", "LElbow", "LArm")\
+
+        if is_l_arm_points and self.is_skeleton_parts(points, "Neck", "MidHip"):
             if absolute_value > 0.05:
-                nta.action_l_shourlder(now_a, now_b, 0.01, self.__motion_service, power=0.2 if power < 0.2 else power)
+                neck_pos = self.to2d_position(points, Skeleton.Skeleton.BODY_PARTS["Neck"])
+                mid_hip_pos = self.to2d_position(points, Skeleton.Skeleton.BODY_PARTS["MidHip"])
+                nta.action_l_shourlder(now_a, now_b, neck_pos, mid_hip_pos, 0.01,
+                                       self.__motion_service, power=0.2 if power < 0.2 else power)
 
     def move_to_l_elbow(self, points):  # 어깨와 팔꿈치, 팔꿈치와 손의 선분에 대한 각도가 힌트
         pass
@@ -217,8 +238,6 @@ class Nao:
                 s2 += str(self.relbow_com_yaw[i]*almath.TO_DEG) + ", "
             else:
                 s2 += str(self.relbow_com_yaw[i]) + ", "
-        print "relbow(roll):", s
-        print "relbow(yaw): ", s2
 
         self.__beforePoints = points
 
