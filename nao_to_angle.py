@@ -75,10 +75,10 @@ def action_r_shourlder(a, b, neck_pos, middle_heap_pos, sleep_time, motion_servi
     elif angle <= to_radian(-76):
         # 기준점이 완전히 바뀌기 때문에 바뀌는 코드를 적어야된다
         motion_service.setAngles("RShoulderPitch", to_radian(-90), 1.0)
+        motion_service.setAngles("RShoulderRoll", -angle-to_radian(180), power)
     else:
         motion_service.setAngles("RShoulderPitch", to_radian(90), 1.0)
-
-    motion_service.setAngles("RShoulderRoll", angle, power)
+        motion_service.setAngles("RShoulderRoll", angle, power)
 
     time.sleep(sleep_time)
 
@@ -128,11 +128,12 @@ def action_l_shourlder(a, b, neck_pos, mid_hip_pos, sleep_time, motion_service, 
     
     if angle >= to_radian(76):
         motion_service.setAngles("LShoulderPitch", to_radian(-90), 1.0)
+        motion_service.setAngles("LShoulderRoll", to_radian(180)-angle, power)
     elif angle <= to_radian(-18):
         motion_service.setAngles("LShoulderPitch", to_radian(90), 1.0)
     else:
         motion_service.setAngles("LShoulderPitch", to_radian(90), 1.0)
-    motion_service.setAngles("LShoulderRoll", angle, power)
+        motion_service.setAngles("LShoulderRoll", angle, power)
 
     time.sleep(sleep_time)
 
