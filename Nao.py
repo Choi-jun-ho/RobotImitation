@@ -7,7 +7,7 @@ import vision_definitions
 import numpy
 import Skeleton
 from Naocap import Naocap
-
+from datetime import datetime
 
 class Nao:
     def __init__(self, nao_ip="127.0.0.1", port=9559, use_nao_cam=False):
@@ -227,37 +227,21 @@ class Nao:
         :param points:
         :return:
         """
-
+        r_arm_time = datetime.now().microsecond
         self.move_to_r_arm(points)
+        print "rarmtime: ", datetime.now().microsecond - r_arm_time
+
+        r_elbow_time = datetime.now().microsecond
         self.move_to_r_elbow(points)
+        print "relobwtime: ", datetime.now().microsecond - r_elbow_time
+
+        l_arm_time = datetime.now().microsecond
         self.move_to_l_arm(points)
+        print "larmtime: ", datetime.now().microsecond - l_arm_time
+
+        l_elbow_time = datetime.now().microsecond
         self.move_to_l_elbow(points)
-
-
-        result_roll = []
-        now = self.__motion_service.getPosition("RElbowRoll", 1, True)
-        if self.relbow_com_roll != None:
-            for i in range(len(self.relbow_com_roll)):
-                result_roll.append(self.relbow_com_roll[i] - now[i])
-
-        self.relbow_com_roll = self.__motion_service.getPosition("RElbowRoll", 1, True)
-        self.relbow_com_yaw = self.__motion_service.getPosition("RElbowYaw", 1, True)
-
-        s = ""
-        for i in range(len(result_roll)):
-            if i >= 3:
-                s += str(result_roll[i]*almath.TO_DEG) + ", "
-            elif i == 2:
-                s += str(result_roll[i]) + ", \n"
-            else:
-                s += str(result_roll[i]) + ","
-
-        s2 = ""
-        for i in range(len(self.relbow_com_yaw)):
-            if i >= 3:
-                s2 += str(self.relbow_com_yaw[i]*almath.TO_DEG) + ", "
-            else:
-                s2 += str(self.relbow_com_yaw[i]) + ", "
+        print "lelobwtime: ", datetime.now().microsecond - l_elbow_time
 
         self.__beforePoints = points
 

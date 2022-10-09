@@ -2,9 +2,12 @@
 
 
 import cv2
+import numpy as np
+
 from Nao import Nao
 from Skeleton import Skeleton
-
+import numpy
+from datetime import datetime
 
 class Draw:
     __Nao = None
@@ -44,8 +47,9 @@ class Draw:
         """예측한 스켈레톤의 각각의 point 점을 그리는 함수
         :return:
         """
-
+        predict_time = datetime.now().microsecond
         self.__predict = self.__Skeleton.get_predict(self.__frame)
+        print "predict_time: ", datetime.now().microsecond - predict_time
         h = self.__predict.shape[2]
         w = self.__predict.shape[3]
 
@@ -124,6 +128,10 @@ class Draw:
 
         (success, self.__frame) = cap.read()
 
+        kernel1d = cv2.getGaussianKernel(3, 3)
+        kernel2d = np.outer(kernel1d, kernel1d.transpose())
+        self.__frame = cv2.filter2D(self.__frame, -1, kernel2d)
+
         (self.__height, self.__width) = self.__frame.shape[:2]
 
         if self.__use_mirror:
@@ -133,6 +141,7 @@ class Draw:
         self.__Skeleton.set_heigh_width(self.__height, self.__width)
 
         while success:
+
             self.__process_frame()
             # t, _ = self.__poseModel.getPerfProfile()
             # freq = cv2.getTickFrequency() / 1000
@@ -142,9 +151,17 @@ class Draw:
             key = cv2.waitKey(1) & 0xFF
             if key == ord("q") or key == 27:
                 break
+
+            print "_____________________________________"
+            camtime = datetime.now().microsecond
             if self.__use_nao_cam:
                 cap = self.__Nao.get_video_capture()
             (success, self.__frame) = cap.read()
+            print "camtime: ", datetime.now().microsecond - camtime
+
+            filter_time = datetime.now().microsecond
+            self.__frame = cv2.filter2D(self.__frame, -1, kernel2d)
+            print "filterTime: ", datetime.now().microsecond - filter_time
 
             if self.__use_mirror:
                 self.__frame = cv2.cuda.flip(self.__frame, 1)
