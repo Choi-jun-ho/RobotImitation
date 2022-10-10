@@ -11,4 +11,4 @@ default_port = 9559
 uit8F_ai_sw_robot_ip = "10.1.22.52"
 
 Draw(use_nao=True, nao_ip=default_ip, port=default_port,
-     use_mirror=False, use_nao_cam=False).process_cam()
+     use_mirror=False, use_nao_cam=True).process_cam()

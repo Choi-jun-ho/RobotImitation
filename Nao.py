@@ -1,4 +1,6 @@
 # -*- coding:utf-8 -*-
+import time
+
 import qi
 import sys
 import almath
@@ -8,6 +10,7 @@ import numpy
 import Skeleton
 from Naocap import Naocap
 from datetime import datetime
+from MotionData import MotionData
 
 class Nao:
     def __init__(self, nao_ip="127.0.0.1", port=9559, use_nao_cam=False):
@@ -167,59 +170,33 @@ class Nao:
             return True, now_a, now_b, power, absolute_value
         return False, None, None, None, None
 
-    def move_to_r_arm(self, points):
-        """ 다리가 고정된 상태에서 오른쪽 팔을 움직일 수 있게 하는 함수
 
-        :param points:
-        :return:
-        """
-        is_r_arm_points, now_a, now_b, power, absolute_value \
-            = self.get_power_and_absolute_value(points, "RShoulder", "RElbow", "RArm")
+    def move_to_parts(self, points, a1, a2, parts, c1, c2, movefuntion):
+        is_l_arm_points, now_a, now_b, power, absolute_value \
+            = self.get_power_and_absolute_value(points, a1, a2, parts)\
 
-        if is_r_arm_points and self.is_skeleton_parts(points, "Neck", "MidHip"):
+        motion_data = None
+
+        if is_l_arm_points and self.is_skeleton_parts(points, c1, c2):
             if absolute_value > 0.05:
-                neck_pos = self.to2d_position(points, Skeleton.Skeleton.BODY_PARTS["Neck"])
-                mid_hip_pos = self.to2d_position(points, Skeleton.Skeleton.BODY_PARTS["MidHip"])
-                nta.action_r_shourlder(now_a, now_b, neck_pos, mid_hip_pos, 0.01,
-                                       self.__motion_service, power=0.2 if power < 0.2 else power)
+                neck_pos = self.to2d_position(points, Skeleton.Skeleton.BODY_PARTS[c1])
+                mid_hip_pos = self.to2d_position(points, Skeleton.Skeleton.BODY_PARTS[c2])
+                parts_movefun = movefuntion
+                motion_data = parts_movefun(now_a, now_b, neck_pos, mid_hip_pos, power=0.2 if power < 0.2 else power)
+        return motion_data
+
+    def move_to_r_arm(self, points):
+        return self.move_to_parts(points, "RShoulder", "RElbow", "RArm", "Neck", "MidHip", nta.action_r_shourlder)
 
     def move_to_r_elbow(self, points):
-        is_r_elbow_points, now_a, now_b, power, absolute_value \
-            = self.get_power_and_absolute_value(points, "RElbow", "RWrist", "RArm")
-
-        if is_r_elbow_points and self.is_skeleton_parts(points, "RShoulder", "RElbow"):
-            if absolute_value > 0.05:
-                rshoulder_pos = self.to2d_position(points, Skeleton.Skeleton.BODY_PARTS["RShoulder"])
-                r_elbow_pos = self.to2d_position(points, Skeleton.Skeleton.BODY_PARTS["RElbow"])
-                nta.action_r_elbow(now_a, now_b, rshoulder_pos, r_elbow_pos, 0.01,
-                                       self.__motion_service, power=0.2 if power < 0.2 else power)
+        return self.move_to_parts(points, "RElbow", "RWrist", "RArm",
+                                  "RShoulder", "RElbow", nta.action_r_elbow)
 
     def move_to_l_arm(self, points):
-        """ 다리가 고정된 상태에서 왼쪽 다리가 고정할 수 있게 움직이는 함수
-
-        :param points:
-        :return:
-        """
-        is_l_arm_points, now_a, now_b, power, absolute_value \
-            = self.get_power_and_absolute_value(points, "LShoulder", "LElbow", "LArm")\
-
-        if is_l_arm_points and self.is_skeleton_parts(points, "Neck", "MidHip"):
-            if absolute_value > 0.05:
-                neck_pos = self.to2d_position(points, Skeleton.Skeleton.BODY_PARTS["Neck"])
-                mid_hip_pos = self.to2d_position(points, Skeleton.Skeleton.BODY_PARTS["MidHip"])
-                nta.action_l_shourlder(now_a, now_b, neck_pos, mid_hip_pos, 0.01,
-                                       self.__motion_service, power=0.2 if power < 0.2 else power)
+        return self.move_to_parts(points, "LShoulder", "LElbow", "LArm", "Neck", "MidHip", nta.action_l_shourlder)
 
     def move_to_l_elbow(self, points):  # 어깨와 팔꿈치, 팔꿈치와 손의 선분에 대한 각도가 힌트
-        is_l_elbow_points, now_a, now_b, power, absolute_value \
-            = self.get_power_and_absolute_value(points, "LElbow", "LWrist", "LArm")
-
-        if is_l_elbow_points and self.is_skeleton_parts(points, "LShoulder", "LElbow"):
-            if absolute_value > 0.05:
-                lshoulder_pos = self.to2d_position(points, Skeleton.Skeleton.BODY_PARTS["LShoulder"])
-                l_elbow_pos = self.to2d_position(points, Skeleton.Skeleton.BODY_PARTS["LElbow"])
-                nta.action_l_elbow(now_a, now_b, lshoulder_pos, l_elbow_pos, 0.01,
-                                   self.__motion_service, power=0.2 if power < 0.2 else power)
+        return self.move_to_parts(points, "LElbow", "LWrist", "LArm", "LShoulder", "LElbow", nta.action_l_elbow)
 
     def __set_point_nao(self, points):
         """Skeleton Point로 움직일 나오의 부위들을 지정하는 함수
@@ -227,23 +204,44 @@ class Nao:
         :param points:
         :return:
         """
+        motion_data = MotionData()
+
         r_arm_time = datetime.now().microsecond
-        self.move_to_r_arm(points)
+        motion_data.add(self.move_to_r_arm(points))
         print "rarmtime: ", datetime.now().microsecond - r_arm_time
 
         r_elbow_time = datetime.now().microsecond
-        self.move_to_r_elbow(points)
+        motion_data.add(self.move_to_r_elbow(points))
         print "relobwtime: ", datetime.now().microsecond - r_elbow_time
 
         l_arm_time = datetime.now().microsecond
-        self.move_to_l_arm(points)
+        motion_data.add(self.move_to_l_arm(points))
         print "larmtime: ", datetime.now().microsecond - l_arm_time
 
         l_elbow_time = datetime.now().microsecond
-        self.move_to_l_elbow(points)
+        motion_data.add(self.move_to_l_elbow(points))
         print "lelobwtime: ", datetime.now().microsecond - l_elbow_time
 
+        move_motion_time = datetime.now().microsecond
+        self.angleInterpolationWithSpeed(motion_data)
+        print "move_motion_time: ", datetime.now().microsecond - move_motion_time
+
+        #time.sleep(0.01)
+
         self.__beforePoints = points
+
+
+    def angleInterpolationWithSpeed(self, motion_data):
+        print motion_data.parts_name
+        print motion_data.angles
+        print motion_data.speeds
+        if len(motion_data.parts_name) != 0:
+            # setAngles
+            # angleInterpolationWithSpeed
+            self.__motion_service.setAngles(motion_data.parts_name,
+                                                        motion_data.angles,
+                                                        motion_data.speeds)
+
 
     def run(self, points):
         self.__set_point_nao(points)
