@@ -43,8 +43,9 @@ class Draw:
         self.__use_gpu = use_gpu
         self.__Skeleton = Skeleton(self.__use_gpu)
         self.__use_mirror = use_mirror
-        self.__use_nao_cam = use_nao_cam
         self.__use_realsense = use_realsense
+        self.__use_nao_cam = use_nao_cam if use_nao else False
+
         if use_nao:
             self.__Nao = Nao(nao_ip, port, use_nao_cam)
         if use_realsense:
