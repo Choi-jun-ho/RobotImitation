@@ -157,7 +157,10 @@ class Draw:
         :return:
         """
 
-        cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+        camera_select = 0
+        if self.__use_realsense:
+            camera_select = 1
+        cap = cv2.VideoCapture(camera_select, cv2.CAP_DSHOW)
 
 
         if self.__use_nao_cam:
