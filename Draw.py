@@ -195,19 +195,15 @@ class Draw:
             if key == ord("q") or key == 27:
                 break
 
-            print "_____________________________________"
-            camtime = datetime.now().microsecond
             if self.__use_nao_cam:
                 cap = self.__Nao.get_video_capture()
             elif self.__use_realsense:
                 cap = self.get_realsense()
 
             (success, self.__frame) = cap.read()
-            print "camtime: ", datetime.now().microsecond - camtime
 
             filter_time = datetime.now().microsecond
             self.__frame = cv2.filter2D(self.__frame, -1, kernel2d)
-            print "filterTime: ", datetime.now().microsecond - filter_time
 
             if self.__use_mirror:
                 self.__frame = cv2.cuda.flip(self.__frame, 1)
