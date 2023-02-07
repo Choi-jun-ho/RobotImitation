@@ -3,20 +3,24 @@
 
 import cv2
 import numpy as np
+import pyrealsense2 as rs
 
 from Nao import Nao
 from Skeleton import Skeleton
-import numpy
 from datetime import datetime
+from UserCap import UserCap
+from SaveData import SaveData
+
 
 class Draw:
     __Nao = None
     __Skeleton = None
     __points = []
+    data = SaveData()
 
     def __init__(self, use_gpu=True,
                  use_nao=False, nao_ip="127.0.0.1", port=9559,
-                 use_mirror=False, use_nao_cam=False):
+                 use_mirror=False, use_nao_cam=False, use_realsense=False):
         """
         진입 점을 가지는 클래스
         내부에는 예측하는 것과 그리는 것이 있으며 그리는 것은 이쪽에서 관리됩니다
@@ -40,9 +44,38 @@ class Draw:
         self.__Skeleton = Skeleton(self.__use_gpu)
         self.__use_mirror = use_mirror
         self.__use_nao_cam = use_nao_cam
+        self.__use_realsense = use_realsense
         if use_nao:
             self.__Nao = Nao(nao_ip, port, use_nao_cam)
+        if use_realsense:
+            # Configure depth and color streams
+            self.pipeline = rs.pipeline()
+            self.config = rs.config()
 
+            # Get device product line for setting a supporting resolution
+            pipeline_wrapper = rs.pipeline_wrapper(self.pipeline)
+            pipeline_profile = self.config.resolve(pipeline_wrapper)
+            device = pipeline_profile.get_device()
+            device_product_line = str(device.get_info(rs.camera_info.product_line))
+
+            found_rgb = False
+            for s in device.sensors:
+                if s.get_info(rs.camera_info.name) == 'RGB Camera':
+                    found_rgb = True
+                    break
+            if not found_rgb:
+                print("The demo requires Depth camera with Color sensor")
+                exit(0)
+
+            self.config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
+
+            if device_product_line == 'L500':
+                self.config.enable_stream(rs.stream.color, 960, 540, rs.format.bgr8, 30)
+            else:
+                self.config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
+
+            # Start streaming
+            self.pipeline.start(self.config)
     def __draw_skeleton_position(self):
         """예측한 스켈레톤의 각각의 point 점을 그리는 함수
         :return:
@@ -73,9 +106,15 @@ class Draw:
             if prob > 0.3:
                 cv2.circle(self.__frame, (int(x), int(y)), 3, (0, 255, 255), thickness=-1,
                            lineType=cv2.FILLED)  # circle(그릴곳, 원의 중심, 반지름, 색)
-                cv2.putText(self.__frame, "{}".format(i), (int(x), int(y)),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1,
-                            lineType=cv2.LINE_AA)
+
+                if self.__use_realsense:
+                    cv2.putText(self.__frame, "{}".format(self.depth_image[y][x]), (int(x), int(y)),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1,
+                                lineType=cv2.LINE_AA)
+                else:
+                    cv2.putText(self.__frame, "{}".format(i), (int(x), int(y)),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1,
+                                lineType=cv2.LINE_AA)
                 self.__Skeleton.points.append((int(x), int(y)))
             else:
                 self.__Skeleton.points.append(None)
@@ -117,10 +156,14 @@ class Draw:
         :return:
         """
 
-        cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+        cap = cv2.VideoCapture(1, cv2.CAP_DSHOW)
+
 
         if self.__use_nao_cam:
             cap = self.__Nao.get_video_capture()
+        elif self.__use_realsense:
+            cap = self.get_realsense()
+
 
         if not cap.isOpened():
             print ("캠을 실행할 수 없음\n", "권한 확인 또는 캠을 설치 해주시길 바랍니다")
@@ -156,6 +199,9 @@ class Draw:
             camtime = datetime.now().microsecond
             if self.__use_nao_cam:
                 cap = self.__Nao.get_video_capture()
+            elif self.__use_realsense:
+                cap = self.get_realsense()
+
             (success, self.__frame) = cap.read()
             print "camtime: ", datetime.now().microsecond - camtime
 
@@ -173,3 +219,29 @@ class Draw:
             cap.release()
 
         cv2.destroyAllWindows()
+
+    def get_realsense(self):
+        frames = self.pipeline.wait_for_frames()
+        depth_frame = frames.get_depth_frame()
+        color_frame = frames.get_color_frame()
+
+        # Convert images to numpy arrays
+        depth_image = np.asanyarray(depth_frame.get_data())
+        color_image = np.asanyarray(color_frame.get_data())
+        depth_colormap = cv2.applyColorMap(cv2.convertScaleAbs(depth_image, alpha=0.03), cv2.COLORMAP_JET)
+
+        depth_colormap_dim = depth_colormap.shape
+        color_colormap_dim = color_image.shape
+
+        # If depth and color resolutions are different, resize color image to match depth image for display
+        if depth_colormap_dim != color_colormap_dim:
+            resized_color_image = cv2.resize(color_image, dsize=(depth_colormap_dim[1], depth_colormap_dim[0]),
+                                             interpolation=cv2.INTER_AREA)
+            images = resized_color_image
+        else:
+            images = color_image
+
+        cap = UserCap(images)
+        self.depth_image = depth_image
+
+        return cap
