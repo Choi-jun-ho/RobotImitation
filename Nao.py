@@ -8,7 +8,7 @@ import nao_to_angle as nta
 import vision_definitions
 import numpy
 import Skeleton
-from Naocap import Naocap
+from UserCap import UserCap
 from datetime import datetime
 from MotionData import MotionData
 
@@ -94,7 +94,7 @@ class Nao:
         img = (numpy.reshape(nao_image_pixel,
                              (nao_image[1], nao_image[0], nao_image[2])))
 
-        cap = Naocap(img)
+        cap = UserCap(img)
         return cap
 
     def is_points(self, points, a, b, parts):
@@ -238,10 +238,7 @@ class Nao:
         if len(motion_data.parts_name) != 0:
             # setAngles
             # angleInterpolationWithSpeed
-            self.__motion_service.setAngles(motion_data.parts_name,
-                                                        motion_data.angles,
-                                                        motion_data.speeds)
-
+            self.__motion_service.setAngles(motion_data.parts_name, motion_data.angles, motion_data.speeds)
 
     def run(self, points):
         self.__set_point_nao(points)
