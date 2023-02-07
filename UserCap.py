@@ -1,5 +1,5 @@
 # coding=utf-8
-class Naocap(object):
+class UserCap(object):
     def __init__(self, img):
         """cv2 cap 형식과 비슷하게 사용하려고 만든 클래스
         read, isOpened 전부 True를 내보냄
