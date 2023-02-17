@@ -11,8 +11,12 @@ import Skeleton
 from UserCap import UserCap
 from datetime import datetime
 from MotionData import MotionData
+from SaveData import SaveData
 
 class Nao:
+
+    data = None
+
     def __init__(self, nao_ip="127.0.0.1", port=9559, use_nao_cam=False):
         """
         Nao 와 관련된 것들을 관리하는 클래스
@@ -25,6 +29,7 @@ class Nao:
 
         self.__use_nao_cam = use_nao_cam
         self.__nao_ready(nao_ip, port)
+        self.data = SaveData();
         self.__beforePoints = None
 
     def __connect(self, ip, port):
@@ -172,17 +177,16 @@ class Nao:
 
 
     def move_to_parts(self, points, a1, a2, parts, c1, c2, movefuntion):
-        is_l_arm_points, now_a, now_b, power, absolute_value \
+        is_joint_points, now_a, now_b, power, absolute_value \
             = self.get_power_and_absolute_value(points, a1, a2, parts)\
 
         motion_data = None
-
-        if is_l_arm_points and self.is_skeleton_parts(points, c1, c2):
-            if absolute_value > 0.05:
-                neck_pos = self.to2d_position(points, Skeleton.Skeleton.BODY_PARTS[c1])
-                mid_hip_pos = self.to2d_position(points, Skeleton.Skeleton.BODY_PARTS[c2])
-                parts_movefun = movefuntion
-                motion_data = parts_movefun(now_a, now_b, neck_pos, mid_hip_pos, power=0.2 if power < 0.2 else power)
+        power = 1
+        if is_joint_points and self.is_skeleton_parts(points, c1, c2):
+            neck_pos = self.to2d_position(points, Skeleton.Skeleton.BODY_PARTS[c1])
+            mid_hip_pos = self.to2d_position(points, Skeleton.Skeleton.BODY_PARTS[c2])
+            parts_movefun = movefuntion
+            motion_data = parts_movefun(now_a, now_b, neck_pos, mid_hip_pos, power=0.3 if power < 0.2 else power)
         return motion_data
 
     def move_to_r_arm(self, points):
@@ -205,26 +209,11 @@ class Nao:
         :return:
         """
         motion_data = MotionData()
-
-        r_arm_time = datetime.now().microsecond
         motion_data.add(self.move_to_r_arm(points))
-        print "rarmtime: ", datetime.now().microsecond - r_arm_time
-
-        r_elbow_time = datetime.now().microsecond
         motion_data.add(self.move_to_r_elbow(points))
-        print "relobwtime: ", datetime.now().microsecond - r_elbow_time
-
-        l_arm_time = datetime.now().microsecond
         motion_data.add(self.move_to_l_arm(points))
-        print "larmtime: ", datetime.now().microsecond - l_arm_time
-
-        l_elbow_time = datetime.now().microsecond
         motion_data.add(self.move_to_l_elbow(points))
-        print "lelobwtime: ", datetime.now().microsecond - l_elbow_time
-
-        move_motion_time = datetime.now().microsecond
         self.angleInterpolationWithSpeed(motion_data)
-        print "move_motion_time: ", datetime.now().microsecond - move_motion_time
 
         #time.sleep(0.01)
 
@@ -232,16 +221,20 @@ class Nao:
 
 
     def angleInterpolationWithSpeed(self, motion_data):
-        print motion_data.parts_name
-        print motion_data.angles
-        print motion_data.speeds
         if len(motion_data.parts_name) != 0:
             # setAngles
             # angleInterpolationWithSpeed
+            self.data.traking_human_joint(motion_data.parts_name, motion_data.angles)
             self.__motion_service.setAngles(motion_data.parts_name, motion_data.angles, motion_data.speeds)
+
+            robot_joint_value = self.__motion_service.getAngles(motion_data.parts_name, False)
+            self.data.traking_robot_joint(motion_data.parts_name, robot_joint_value)
+            time.sleep(0.005)
+
 
     def run(self, points):
         self.__set_point_nao(points)
 
     def rest(self):
         self.__motion_service.rest()
+        self.data.show()
