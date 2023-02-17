@@ -9,14 +9,12 @@ from Nao import Nao
 from Skeleton import Skeleton
 from datetime import datetime
 from UserCap import UserCap
-from SaveData import SaveData
 
 
 class Draw:
     __Nao = None
     __Skeleton = None
     __points = []
-    data = SaveData()
 
     def __init__(self, use_gpu=True,
                  use_nao=False, nao_ip="127.0.0.1", port=9559,
@@ -81,9 +79,7 @@ class Draw:
         """예측한 스켈레톤의 각각의 point 점을 그리는 함수
         :return:
         """
-        predict_time = datetime.now().microsecond
         self.__predict = self.__Skeleton.get_predict(self.__frame)
-        print "predict_time: ", datetime.now().microsecond - predict_time
         h = self.__predict.shape[2]
         w = self.__predict.shape[3]
 
