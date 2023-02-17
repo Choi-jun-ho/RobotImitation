@@ -4,6 +4,8 @@ import time
 import qi
 import sys
 import almath
+
+import NaoInfo
 import nao_to_angle as nta
 import vision_definitions
 import numpy
@@ -14,8 +16,6 @@ from MotionData import MotionData
 from SaveData import SaveData
 
 class Nao:
-
-    data = None
 
     def __init__(self, nao_ip="127.0.0.1", port=9559, use_nao_cam=False):
         """
@@ -29,7 +29,8 @@ class Nao:
 
         self.__use_nao_cam = use_nao_cam
         self.__nao_ready(nao_ip, port)
-        self.data = SaveData();
+        self.data = SaveData(self.nao_info)
+        self.nao_info = None
         self.__beforePoints = None
 
     def __connect(self, ip, port):
@@ -58,6 +59,8 @@ class Nao:
         """
         self.__motion_service = self.__session.service("ALMotion")
         self.__posture_service = self.__session.service("ALRobotPosture")
+
+        self.nao_info = NaoInfo.NaoInfo(self.__motion_service)
 
         #print self.__use_nao_cam
         if self.__use_nao_cam is True:
