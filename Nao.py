@@ -14,6 +14,7 @@ from UserCap import UserCap
 from datetime import datetime
 from MotionData import MotionData
 from SaveData import SaveData
+import time
 
 class Nao:
 
@@ -184,12 +185,12 @@ class Nao:
             = self.get_power_and_absolute_value(points, a1, a2, parts)\
 
         motion_data = None
-        power = 1
+
         if is_joint_points and self.is_skeleton_parts(points, c1, c2):
             neck_pos = self.to2d_position(points, Skeleton.Skeleton.BODY_PARTS[c1])
             mid_hip_pos = self.to2d_position(points, Skeleton.Skeleton.BODY_PARTS[c2])
             parts_movefun = movefuntion
-            motion_data = parts_movefun(now_a, now_b, neck_pos, mid_hip_pos, power=0.3 if power < 0.2 else power)
+            motion_data = parts_movefun(now_a, now_b, neck_pos, mid_hip_pos, power)
         return motion_data
 
     def move_to_r_arm(self, points):
@@ -218,7 +219,7 @@ class Nao:
         motion_data.add(self.move_to_l_elbow(points))
         self.angleInterpolationWithSpeed(motion_data)
 
-        #time.sleep(0.01)
+        #time.sleep(0.01)q1
 
         self.__beforePoints = points
 
@@ -232,7 +233,7 @@ class Nao:
 
             robot_joint_value = self.__motion_service.getAngles(motion_data.parts_name, False)
             self.data.traking_robot_joint(motion_data.parts_name, robot_joint_value)
-            time.sleep(0.005)
+            # time.sleep(0.005)
 
 
     def run(self, points):

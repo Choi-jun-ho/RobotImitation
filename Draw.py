@@ -100,7 +100,7 @@ class Draw:
             y = (self.__height * point[1]) / h
 
             # 키 포인트 검출한 결과가 0.1보다 크면(검출한 곳이 위 BODY_PARTS 랑 맞는 부위면) points 에 추가, 검출 했는데 부위가 없으면 None 으로
-            if prob > 0.3:
+            if prob > 0.21:
                 cv2.circle(self.__frame, (int(x), int(y)), 3, (0, 255, 255), thickness=-1,
                            lineType=cv2.FILLED)  # circle(그릴곳, 원의 중심, 반지름, 색)
 

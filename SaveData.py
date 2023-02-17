@@ -125,8 +125,8 @@ class SaveData:
         return time_list, time_list2
 
     def show(self):
-        graph_joint_time_human = self.make_graph(self.time_of_human_save, self.human_joints_save_of_time, 20, 10)
-        graph_joint_time_robot = self.make_graph(self.time_of_robot_save, self.robot_joints_save_of_time, 20, 10)
+        graph_joint_time_human = self.make_graph(self.time_of_human_save, self.human_joints_save_of_time, 20)
+        graph_joint_time_robot = self.make_graph(self.time_of_robot_save, self.robot_joints_save_of_time, 20)
 
         graph_joint_time_human, graph_joint_time_robot = self.match_graph_bases(graph_joint_time_human, graph_joint_time_robot)
 
